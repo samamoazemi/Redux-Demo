@@ -66,9 +66,9 @@ const reducer = combineReducers({
 const store = createStore(reducer, applyMiddleware(logger));
 console.log("initial state", store.getState());
 
-// const unsubscribe = store.subscribe(() =>
-//   console.log("updated state", store.getState())
-// );
+ const unsubscribe = store.subscribe(() =>
+   console.log("updated state", store.getState())
+ );
 
 store.dispatch(buyCake());
 store.dispatch(buyCake());

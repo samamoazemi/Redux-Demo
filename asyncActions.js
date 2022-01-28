@@ -1,7 +1,11 @@
 // async js =>
 const redux = require("redux");
 const createStore = redux.createStore;
-
+const applyMiddleware = redux.applyMiddleware;
+const reduxThunk = require("redux-thunk").default;
+const axios = require("axios");
+const reduxLogger = require("redux-logger");
+const logger = reduxLogger.createLogger();
 // fetch users :
 // 1.request => loading
 // 2.success => data
@@ -28,7 +32,7 @@ function fetchUsersFailure(error) {
 
 function fetchUsersSuccess(users) {
     return {
-        type: FETCH_USERS_SECCESS,
+        type: FETCH_USERS_SUCCESS,
         payload: users,
     }
 }
@@ -43,7 +47,7 @@ const initialState = {
 const reducer = (state = initialState, action) => {
     switch(action.type){
       case FETCH_USERS_REQUEST:
-          return { loading: true };
+          return { ...state, loading: true };
       case FETCH_USERS_FAILURE:
           return { loading: false, error: action.payload, data:[] };
       case FETCH_USERS_SUCCESS:
@@ -52,7 +56,22 @@ const reducer = (state = initialState, action) => {
         return state;
     }
 }
-const store = createStore(reducer);
 
-// fetch users => axios.get("...") :
-// redux-thunk
+const fetchUsers = () => {
+    return function (dispatch) {
+        dispatch(fetchUsersRequest());
+        axios
+          .get("https://jsonplaceholder.typicode.com/users")
+          .then((res) => {
+               const userId = res.data.map( u => u.id);
+               dispatch(fetchUsersSuccess(userId));
+          })
+          .catch((error) => {
+              dispatch(fetchUsersFailure(error));
+          })
+    }
+}
+
+const store = createStore(reducer, applyMiddleware(reduxThunk, logger));
+
+store.dispatch(fetchUsers());
